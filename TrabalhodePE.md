@@ -229,13 +229,18 @@ plt.show()
 
 ![png](Trabalho_Final_PE_files/Trabalho_Final_PE_33_0.png)
 
-*Figura 6: Boxplots de Idade, Glicose Média e IMC.*
+Figura 6: Boxplots de Idade, Glicose Média e IMC. Cada boxplot mostra mediana (linha central), quartis (caixa) e possíveis outliers (pontos individuais fora dos whiskers).
 
-Os boxplots confirmam a presença de muitos *outliers* (valores atípicos) para Glicose e IMC, indicando que alguns pacientes possuem valores muito elevados nessas variáveis.
+Analisando os boxplots:
+
+* Idade: mediana ~45 anos, Q1 ~25 e Q3 ~61. A amplitude interquartil é 36 anos, e não vemos outliers significativos (os whiskers praticamente vão do mínimo ao máximo, indicando uma distribuição longa mas sem valores aberrantes fora de 1.5x IQR). Idades jovens (próximas de 0) e a máxima 82 estão dentro do intervalo esperado (não marcados como outlier pelo critério do boxplot).
+* Glicose: mediana ~92 mg/dL, Q3 ~114 e Q1 ~77. Aqui notamos vários outliers acima: os pontos indicam pacientes com glicose bem acima do limite superior do whisker. De fato, pelo critério 1.5xIQR, valores acima de ~155 mg/dL já seriam marcados como outliers – confirmando que há muitos pacientes com glicose elevada fora desse intervalo (reforçando a cauda longa direita observada).
+* IMC: mediana ~28, Q3 ~33, Q1 ~23,5. Existem outliers superiores bem evidentes (pontos acima de ~47-50 de IMC), correspondendo aos casos de obesidade severa (até 97,6). Não há outliers inferiores extremos (IMC mínimo ~10 ainda está um pouco acima do limiar de outlier pelo IQR).
+Em resumo, do ponto de vista descritivo, os pacientes do dataset em média têm meia-idade, com glicemia tendendo a ser alta (muitos acima do normal) e IMC médio correspondendo a sobrepeso. Isso sugere uma população de risco considerável: idade avançando, sobrepeso/obesidade e predisposição a diabetes – combinação que está alinhada com os fatores que elevam o risco de AVC na literatura médica
 
 # Correlação entre Idade e Nível de Glicose
 
-Investigamos se pacientes mais velhos tendem a apresentar glicose média mais elevada.
+Dentre as variáveis quantitativas, é relevante investigar a relação entre idade e nível médio de glicose no sangue. Sabemos que ambas tendem a aumentar o risco de AVC individualmente (idade avançada e diabetes/glicemia alta são fatores de risco independentes). Aqui, examinamos se pacientes mais velhos tendem a apresentar glicose média mais elevada (possivelmente indicando maior prevalência de pré-diabetes/diabetes com a idade). Para quantificar isso, calculamos o coeficiente de correlação de Pearson entre idade e glicose:
 
 ```python
 import numpy as np
@@ -245,11 +250,11 @@ print(f"Correlação de Pearson (idade vs glicose média) = {corr:.3f}")
 ```
 > Correlação de Pearson (idade vs glicose média) = 0.238
 
-O valor de 0,238 indica uma correlação positiva fraca entre idade e nível de glicose. Embora estatisticamente significativa, na prática a idade explica apenas cerca de $0,238^2 \approx 5,7\%$ da variação nos níveis de glicose.
+O valor obtido foi aproximadamente 0,238. Ou seja, há uma correlação positiva fraca entre idade e nível de glicose. Esse coeficiente indica que, no geral, pacientes mais velhos tendem a ter glicemia média ligeiramente mais alta, mas a relação não é muito forte (o coeficiente vai de -1 a 1, então 0,238 representa uma associação positiva de baixa intensidade). Podemos também verificar a significância estatística dessa correlação. Com 5110 observações, mesmo uma correlação fraca tende a ser significativa. De fato, o teste de Pearson para  H0:ᵨ=0  retorna um p-valor praticamente zero (muito menor que 0,001), indicando que essa correlação é estatisticamente diferente de 0. Entretanto, do ponto de vista prático, o coeficiente em torno de 0,24 sugere que a idade explica apenas cerca de $0,238^2 \approx 5,7\%$ da variação nos níveis de glicose. Muitos outros fatores além da idade influenciam a glicemia (por exemplo, genética, dieta, atividade física, uso de medicamentos etc.).
 
 # Regressão Linear Simples (Glicose ~ Idade)
 
-Modelamos a relação entre as variáveis usando um modelo linear simples $Y = \beta_0 + \beta_1 X$, onde Y é a glicose e X é a idade.
+Embora a correlação não seja forte, podemos modelar a relação entre idade e glicose por meio de uma reta de regressão linear simples. Isso nos permite estimar, em média, quanto aumenta o nível médio de glicose a cada ano adicional de idade. Vamos tomar idade como variável explicativa (X) e glicose média como variável resposta (Y) em um modelo linear $Y = \beta_0 + \beta_1 X$,  Ajustaremos o modelo e obteremos os coeficientes:
 
 ```python
 from sklearn.linear_model import LinearRegression
@@ -276,8 +281,9 @@ print(f"R² do modelo = {r2:.3f}")
 A equação de regressão ajustada é:
 $Glicose\ Média\ Estimada = 85,53 + 0,477 \times Idade$.
 
-Isso sugere que, em média, a cada ano a mais de idade, o nível de glicose aumenta em 0,477 mg/dL. O $R^2$ de 0,057 confirma que o modelo tem baixo poder explicativo, como esperado pela correlação fraca.
+Em outras palavras, o modelo sugere que, a cada ano a mais de idade, o nível médio de glicose do paciente aumenta em torno de 0,477 mg/dL, em média. Assim, por exemplo, uma pessoa 10 anos mais velha teria cerca de 4,8 mg/dL a mais de glicose média prevista, em comparação a uma mais jovem (mantidos outros fatores constantes). O intercepto 85,53 indica a glicemia média estimada para um paciente de 0 anos (obviamente extrapolado fora do alcance real, mas matematicamente é o ponto onde a reta cruza o eixo de glicose).
 
+O valor de  R2≈0,057  confirma que a idade explica somente 5,7% da variação total da glicose – coerente com a correlação fraca observada. Isso significa que há grande dispersão dos pontos em torno da reta, ou seja, indivíduos da mesma idade podem ter glicoses muito diferentes. Ainda assim, a inclinação positiva reflete a tendência geral de maior glicemia em idades mais avançadas, o que faz sentido (maior prevalência de diabetes em pessoas idosas cdc.gov ). A figura a seguir mostra o gráfico de dispersão dos dados de idade vs. glicose, juntamente com a reta de regressão ajustada em vermelho:
 ```python
 plt.figure(figsize=(8,5))
 sns.scatterplot(x='age', y='avg_glucose_level', data=df, alpha=0.5)
@@ -294,11 +300,16 @@ plt.show()
 
 *Figura 7: Diagrama de dispersão com a linha de regressão, mostrando a leve tendência positiva.*
 
+Visualmente, podemos confirmar que os pontos estão bem espalhados e a linha de tendência tem uma subida lenta. Observando o gráfico, por exemplo, pacientes em torno de 80 anos apresentam glicoses desde ~70 até ~250 mg/dL – ou seja, a idade por si só não determina a glicemia, mas existe uma leve tendência ascendente. Em termos práticos: pacientes mais velhos têm mais chance de serem diabéticos ou pré-diabéticos, o que eleva sua glicemia média. No entanto, muitos idosos ainda mantêm glicose normal, e muitos jovens já têm glicose alta, de forma que a correlação não é alta. Fatores como dieta, genética e presença de condições como obesidade desempenham papéis importantes na glicose independente da idade.
+
 # Conclusões
 
-* A amostra é majoritariamente composta por mulheres de meia-idade, com baixa incidência de AVC (~5%).
-* Fatores de risco como hipertensão (9,7%), sobrepeso/obesidade (64%) e glicemia elevada (~39% com pré-diabetes ou diabetes) são prevalentes.
-* Existe uma correlação positiva fraca, mas significativa, entre idade e glicemia.
-* A análise confirma que o perfil de risco da amostra está alinhado com o conhecimento médico sobre AVC, destacando a importância do controle de peso, glicemia e pressão arterial.
+* A maioria dos pacientes da amostra é do sexo feminino e de meia-idade. Apenas ~5% efetivamente sofreram AVC, refletindo a baixa incidência do evento no conjunto.
+* Entre os fatores de risco categóricos, destacam-se a proporção de hipertensos (9,7%) e diabéticos potenciais (~19% com glicose muito alta). A maioria dos pacientes (64%) está acima do peso ideal (sobrepeso/obesidade), o que agrava outros riscos.
+* As distribuições das variáveis contínuas mostram: Idade: amplitude grande (0 a 82 anos) com mediana de 45 anos; distribuição levemente assimétrica à esquerda. Glicose média: média ~106 mg/dL, mediana ~92 mg/dL, distribuição bastante assimétrica à direita com muitos outliers altos (indicando parcela de pacientes diabéticos).
+* IMC: média ~28,9 kg/m² (sobrepeso), mediana ~28,1, distribuição assimétrica à direita com vários casos de obesidade severa.
+* A análise de correlação revelou uma associação positiva porém fraca entre idade e glicemia. A regressão linear quantificou essa relação: ~0,48 mg/dL a mais de glicose por ano de idade, embora explicando apenas 5,7% da variabilidade total (R²=0,057).
 
-Estes resultados preparam o terreno para estudos posteriores, como a criação de modelos preditivos para identificar pacientes de alto risco.
+Esses resultados refletem que, dentro deste conjunto de pacientes, o perfil de risco de AVC inclui frequentemente excesso de peso, glicose elevada e idade avançada – fatores que, combinados, aumentam substancialmente o risco de um evento cerebrovascular. A presença de hipertensão em ~10% e de tabagismo ativo em ~15% complementa esse cenário de risco. Tais achados estão alinhados com o conhecimento médico: sabe-se que controlar a pressão alta, a glicemia e o peso, além de evitar fumar, são medidas essenciais na prevenção do AVC.
+
+Portanto, a análise descritiva confirma a importância desses fatores na amostra e prepara o terreno para estudos posteriores, como modelos preditivos de AVC ou análises multivariadas para quantificar a influência relativa de cada fator de risco.
