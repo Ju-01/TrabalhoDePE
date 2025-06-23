@@ -1,5 +1,3 @@
-%%writefile app.py
-
 import streamlit as st
 import pandas as pd
 import seaborn as sns
@@ -131,8 +129,8 @@ with tab2:
     st.pyplot(fig_corr)
 
     st.markdown("---")
-    st.header("Análise de Dispersão Interativa")
-    st.markdown("Selecione duas variáveis para visualizar a relação entre elas em um gráfico de dispersão. Você também pode segmentar os dados por cor.")
+    st.header("Análise Bivariada Interativa")
+    st.markdown("Selecione duas variáveis para visualizar a relação entre elas. Marque a caixa para adicionar a análise de regressão linear.")
 
     opcoes_numericas = ['age', 'avg_glucose_level', 'bmi']
     opcoes_categoricas_hue = ['Nenhuma', 'genero_pt', 'avc_pt', 'tipo_residencia_pt']
@@ -143,23 +141,50 @@ with tab2:
     with col_sel2:
         y_axis = st.selectbox("Selecione a variável do Eixo Y:", options=opcoes_numericas, index=1)
     with col_sel3:
+        # O hue não funciona com regplot, então desabilitamos se a regressão for escolhida
+        # Ou simplesmente o removemos da lógica do regplot
         hue_axis = st.selectbox("Colorir por (opcional):", options=opcoes_categoricas_hue, index=0)
+    
+    # Checkbox para ativar a regressão <--- ADICIONADO DE VOLTA
+    show_regression = st.checkbox("Mostrar linha de regressão e coeficientes")
 
-    hue_param = None if hue_axis == 'Nenhuma' else hue_axis
-
-    if x_axis and y_axis:
-        fig_scatter, ax_scatter = plt.subplots(figsize=(10, 6))
+    # Plotar o gráfico
+    fig_scatter, ax_scatter = plt.subplots(figsize=(10, 6))
+    
+    # Lógica para escolher o gráfico correto <--- LÓGICA ADICIONADA
+    if show_regression:
+        sns.regplot(data=df_filtrado, x=x_axis, y=y_axis, ax=ax_scatter,
+                    scatter_kws={'alpha':0.4}, line_kws={"color": "red"})
+        ax_scatter.set_title(f"Regressão Linear: {x_axis.capitalize()} vs. {y_axis.capitalize()}")
+    else:
+        hue_param = None if hue_axis == 'Nenhuma' else hue_axis
         sns.scatterplot(data=df_filtrado, x=x_axis, y=y_axis, hue=hue_param, ax=ax_scatter, alpha=0.6, palette="viridis")
         ax_scatter.set_title(f"Gráfico de Dispersão: {x_axis.capitalize()} vs. {y_axis.capitalize()}")
-        ax_scatter.set_xlabel(x_axis.replace('_', ' ').capitalize())
-        ax_scatter.set_ylabel(y_axis.replace('_', ' ').capitalize())
-        st.pyplot(fig_scatter)
+    
+    ax_scatter.set_xlabel(x_axis.replace('_', ' ').capitalize())
+    ax_scatter.set_ylabel(y_axis.replace('_', ' ').capitalize())
+    st.pyplot(fig_scatter)
 
-        if df_filtrado.shape[0] > 1:
-            corr_scatter, p_scatter = pearsonr(df_filtrado[x_axis], df_filtrado[y_axis])
-            st.metric(f"Correlação entre {x_axis} e {y_axis}", f"{corr_scatter:.3f}",
-                      help=f"P-valor: {p_scatter:.3g}. Um p-valor baixo (geralmente < 0.05) indica que a correlação é estatisticamente significativa.")
+    # Calcular e exibir estatísticas
+    if df_filtrado.shape[0] > 1:
+        corr_scatter, p_scatter = pearsonr(df_filtrado[x_axis], df_filtrado[y_axis])
+        st.metric(f"Correlação entre {x_axis} e {y_axis}", f"{corr_scatter:.3f}",
+                  help=f"P-valor: {p_scatter:.3g}. Um p-valor baixo (geralmente < 0.05) indica que a correlação é estatisticamente significativa.")
 
+        # Se o checkbox de regressão estiver marcado, mostrar os coeficientes <--- LÓGICA ADICIONADA
+        if show_regression:
+            X = df_filtrado[[x_axis]]
+            y = df_filtrado[y_axis]
+            model = LinearRegression().fit(X, y)
+            r2 = model.score(X, y)
+            beta1 = model.coef_[0]
+            beta0 = model.intercept_
+
+            st.subheader("Resultados da Regressão Linear Simples")
+            reg_col1, reg_col2, reg_col3 = st.columns(3)
+            reg_col1.metric("Coeficiente Angular (β₁)", f"{beta1:.3f}")
+            reg_col2.metric("Intercepto (β₀)", f"{beta0:.2f}")
+            reg_col3.metric("Coeficiente de Determinação (R²)", f"{r2:.3f}")
 
 # --- Aba 3: Dados Detalhados ---
 with tab3:
