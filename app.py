@@ -151,7 +151,7 @@ with tab2:
     # Plotar o gráfico
     fig_scatter, ax_scatter = plt.subplots(figsize=(10, 6))
     
-    # Lógica para escolher o gráfico correto <--- LÓGICA ADICIONADA
+    # Lógica para escolher o gráfico correto
     if show_regression:
         sns.regplot(data=df_filtrado, x=x_axis, y=y_axis, ax=ax_scatter,
                     scatter_kws={'alpha':0.4}, line_kws={"color": "red"})
