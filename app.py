@@ -1,3 +1,5 @@
+%%writefile app.py
+
 import streamlit as st
 import pandas as pd
 import seaborn as sns
@@ -120,11 +122,9 @@ with tab2:
     st.header("Matriz de Correlação")
     st.markdown("O mapa de calor abaixo mostra a correlação de Pearson entre as variáveis numéricas. Valores próximos de 1 (vermelho) indicam uma forte correlação positiva, enquanto valores próximos de -1 (azul) indicam uma forte correlação negativa.")
 
-    # Selecionar colunas para a matriz
     cols_corr = ['age', 'avg_glucose_level', 'bmi', 'hypertension', 'heart_disease', 'stroke']
     matriz_corr = df_filtrado[cols_corr].corr()
 
-    # Plotar o heatmap
     fig_corr, ax_corr = plt.subplots(figsize=(10, 7))
     sns.heatmap(matriz_corr, annot=True, fmt=".2f", cmap="coolwarm", ax=ax_corr, linewidths=.5)
     ax_corr.set_title("Mapa de Calor de Correlações")
@@ -134,7 +134,6 @@ with tab2:
     st.header("Análise de Dispersão Interativa")
     st.markdown("Selecione duas variáveis para visualizar a relação entre elas em um gráfico de dispersão. Você também pode segmentar os dados por cor.")
 
-    # Opções para os seletores
     opcoes_numericas = ['age', 'avg_glucose_level', 'bmi']
     opcoes_categoricas_hue = ['Nenhuma', 'genero_pt', 'avc_pt', 'tipo_residencia_pt']
 
@@ -146,10 +145,8 @@ with tab2:
     with col_sel3:
         hue_axis = st.selectbox("Colorir por (opcional):", options=opcoes_categoricas_hue, index=0)
 
-    # Lógica para o parâmetro 'hue'
     hue_param = None if hue_axis == 'Nenhuma' else hue_axis
 
-    # Plotar o gráfico de dispersão interativo
     if x_axis and y_axis:
         fig_scatter, ax_scatter = plt.subplots(figsize=(10, 6))
         sns.scatterplot(data=df_filtrado, x=x_axis, y=y_axis, hue=hue_param, ax=ax_scatter, alpha=0.6, palette="viridis")
@@ -158,7 +155,6 @@ with tab2:
         ax_scatter.set_ylabel(y_axis.replace('_', ' ').capitalize())
         st.pyplot(fig_scatter)
 
-        # Calcular e exibir a correlação para o par selecionado
         if df_filtrado.shape[0] > 1:
             corr_scatter, p_scatter = pearsonr(df_filtrado[x_axis], df_filtrado[y_axis])
             st.metric(f"Correlação entre {x_axis} e {y_axis}", f"{corr_scatter:.3f}",
